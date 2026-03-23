@@ -1063,10 +1063,17 @@ static void *rom_set_mr(Rom *rom, Object *owner, const char *name, bool ro)
     void *data;
 
     rom->mr = g_malloc(sizeof(*rom->mr));
-    memory_region_init_resizeable_ram(rom->mr, owner, name,
-                                      rom->datasize, rom->romsize,
-                                      fw_cfg_resized,
-                                      &error_fatal);
+    if (mem_dir) {
+        g_autofree char *fname = g_strdup_printf("%s/%s", mem_dir, name);
+        qemu_mkdir_for_file(fname);
+        memory_region_init_ram_from_file(rom->mr, owner, name, rom->romsize, 4096,
+                        RAM_SHARED | RAM_NAMED_FILE, fname, 0, &error_fatal);
+    } else {
+        memory_region_init_resizeable_ram(rom->mr, owner, name,
+                                          rom->datasize, rom->romsize,
+                                          fw_cfg_resized,
+                                          &error_fatal);
+    }
     memory_region_set_readonly(rom->mr, ro);
     vmstate_register_ram_global(rom->mr);
 

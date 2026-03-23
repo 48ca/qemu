@@ -775,6 +775,13 @@ SRST
     Allocate guest RAM from a temporarily created file in path.
 ERST
 
+DEF("mem-dir", HAS_ARG, QEMU_OPTION_memdir,
+    "-mem-dir DIR    provide directory for all guest memory files\n", QEMU_ARCH_ALL)
+SRST
+``-mem-dir dir``
+    Allocate all guest memory from files in dir.
+ERST
+
 DEF("mem-prealloc", 0, QEMU_OPTION_mem_prealloc,
     "-mem-prealloc   preallocate guest memory (use with -mem-path)\n",
     QEMU_ARCH_ALL)

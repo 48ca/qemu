@@ -10,6 +10,8 @@
 
 extern int only_migratable;
 extern const char *qemu_name;
+extern const char *mem_dir;
+void qemu_mkdir_for_file(const char *fname);
 extern QemuUUID qemu_uuid;
 extern bool qemu_uuid_set;
 

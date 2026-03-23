@@ -166,8 +166,15 @@ typedef struct DeviceOption {
     QTAILQ_ENTRY(DeviceOption) next;
 } DeviceOption;
 
+void qemu_mkdir_for_file(const char *fname)
+{
+    g_autofree char *dir = g_path_get_dirname(fname);
+    g_mkdir_with_parents(dir, 0755);
+}
+
 static const char *cpu_option;
 static const char *mem_path;
+const char *mem_dir;
 static const char *incoming;
 static const char *incoming_str[MIGRATION_CHANNEL_TYPE__MAX];
 static MigrationChannel *incoming_channels[MIGRATION_CHANNEL_TYPE__MAX];
@@ -3148,6 +3155,9 @@ void qemu_init(int argc, char **argv)
 #endif
             case QEMU_OPTION_mempath:
                 mem_path = optarg;
+                break;
+            case QEMU_OPTION_memdir:
+                mem_dir = optarg;
                 break;
             case QEMU_OPTION_mem_prealloc:
                 mem_prealloc = 1;

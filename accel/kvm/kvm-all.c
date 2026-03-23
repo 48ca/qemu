@@ -958,6 +958,8 @@ static bool kvm_slot_get_dirty_log(KVMState *s, KVMSlot *slot)
     if (ret) {
         error_report_once("%s: KVM_GET_DIRTY_LOG failed with %d",
                           __func__, ret);
+        /* This is a hack for the special filesystem */
+        ret = 0;
     }
     return ret == 0;
 }

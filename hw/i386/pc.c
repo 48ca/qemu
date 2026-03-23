@@ -25,6 +25,7 @@
 #include "qemu/osdep.h"
 #include "qemu/units.h"
 #include "exec/target_page.h"
+#include "system/system.h"
 #include "hw/i386/pc.h"
 #include "hw/char/serial-isa.h"
 #include "hw/char/parallel.h"
@@ -876,6 +877,15 @@ void pc_memory_init(PCMachineState *pcms,
         if (machine_require_guest_memfd_private(machine)) {
             memory_region_init_ram_guest_memfd_private(
                 option_rom_mr, NULL, "pc.rom", PC_ROM_SIZE, &error_fatal);
+        } else if (mem_dir) {
+            g_autofree char *fname = g_strdup_printf("%s/pc.rom", mem_dir);
+            qemu_mkdir_for_file(fname);
+            memory_region_init_ram_from_file(option_rom_mr, NULL, "pc.rom",
+                            PC_ROM_SIZE, 4096, RAM_SHARED | RAM_NAMED_FILE,
+                            fname, 0, &error_fatal);
+            if (pcmc->pci_enabled) {
+                memory_region_set_readonly(option_rom_mr, true);
+            }
         } else {
             memory_region_init_ram(option_rom_mr, NULL, "pc.rom", PC_ROM_SIZE,
                                 &error_fatal);

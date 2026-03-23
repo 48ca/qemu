@@ -16,6 +16,7 @@
 #include "qemu/module.h"
 #include "qemu/madvise.h"
 #include "system/hostmem.h"
+#include "system/system.h"
 #include "qom/object_interfaces.h"
 #include "qom/object.h"
 #include "qapi/visitor.h"
@@ -89,6 +90,15 @@ file_backend_memory_alloc(HostMemoryBackend *backend, Error **errp)
     ram_flags |= backend->guest_memfd_private ? RAM_GUEST_MEMFD_PRIVATE : 0;
     ram_flags |= fb->is_pmem ? RAM_PMEM : 0;
     ram_flags |= RAM_NAMED_FILE;
+
+    if (mem_dir && fb->mem_path && fb->mem_path[0] != '/') {
+        g_autofree char *fname = g_strdup_printf("%s/%s", mem_dir, fb->mem_path);
+        qemu_mkdir_for_file(fname);
+        return memory_region_init_ram_from_file(&backend->mr, OBJECT(backend), name,
+                                                backend->size, fb->align, ram_flags,
+                                                fname, fb->offset, errp);
+    }
+
     return memory_region_init_ram_from_file(&backend->mr, OBJECT(backend), name,
                                             backend->size, fb->align, ram_flags,
                                             fb->mem_path, fb->offset, errp);

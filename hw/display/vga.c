@@ -37,6 +37,7 @@
 #include "ui/console.h"
 #include "qemu/timer.h"
 #include "hw/xen/xen.h"
+#include "system/system.h"
 #include "migration/vmstate.h"
 #include "trace.h"
 
@@ -2262,8 +2263,16 @@ bool vga_common_init(VGACommonState *s, Object *obj, Error **errp)
         return false;
     }
 
-    memory_region_init_ram_flags_nomigrate(&s->vram, obj, "vga.vram",
-                                           s->vram_size, 0, &local_err);
+    if (mem_dir) {
+        g_autofree char *fname = g_strdup_printf("%s/vga.vram", mem_dir);
+        qemu_mkdir_for_file(fname);
+        memory_region_init_ram_from_file(&s->vram, obj, "vga.vram", s->vram_size,
+                                         4096, RAM_SHARED | RAM_NAMED_FILE,
+                                         fname, 0, &local_err);
+    } else {
+        memory_region_init_ram_flags_nomigrate(&s->vram, obj, "vga.vram",
+                                               s->vram_size, 0, &local_err);
+    }
     if (local_err) {
         error_propagate(errp, local_err);
         return false;

@@ -1040,6 +1040,18 @@ static bool create_default_memdev(MachineState *ms, const char *path,
     Object *obj;
     MachineClass *mc = MACHINE_GET_CLASS(ms);
     bool r = false;
+    g_autofree char *fname = NULL;
+
+    if (mem_dir) {
+        if (path) {
+            if (path[0] != '/') {
+                path = fname = g_strdup_printf("%s/%s", mem_dir, path);
+            }
+        } else {
+            path = fname = g_strdup_printf("%s/%s", mem_dir, mc->default_ram_id);
+        }
+        qemu_mkdir_for_file(path);
+    }
 
     obj = object_new(path ? TYPE_MEMORY_BACKEND_FILE : TYPE_MEMORY_BACKEND_RAM);
     if (path) {

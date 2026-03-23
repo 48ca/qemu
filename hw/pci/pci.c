@@ -27,6 +27,7 @@
 #include "qemu/units.h"
 #include "hw/acpi/pcihp.h"
 #include "hw/core/irq.h"
+#include "system/system.h"
 #include "hw/pci/pci.h"
 #include "hw/pci/pci_bridge.h"
 #include "hw/pci/pci_bus.h"
@@ -2652,8 +2653,15 @@ static void pci_add_option_rom(PCIDevice *pdev, bool is_default_rom,
              vmsd ? vmsd->name : object_get_typename(OBJECT(pdev)));
 
     pdev->has_rom = true;
-    memory_region_init_rom(&pdev->rom, OBJECT(pdev), name, pdev->romsize,
-                           &error_fatal);
+    if (mem_dir) {
+        g_autofree char *fname = g_strdup_printf("%s/%s", mem_dir, name);
+        qemu_mkdir_for_file(fname);
+        memory_region_init_ram_from_file(&pdev->rom, OBJECT(pdev), name, pdev->romsize,
+                        4096, RAM_SHARED | RAM_NAMED_FILE, fname, 0, &error_fatal);
+    } else {
+        memory_region_init_rom(&pdev->rom, OBJECT(pdev), name, pdev->romsize,
+                               &error_fatal);
+    }
 
     if (load_file) {
         void *ptr = memory_region_get_ram_ptr(&pdev->rom);

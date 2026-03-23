@@ -31,6 +31,7 @@
 #include "system/xen.h"
 #include "trace.h"
 
+#include "system/system.h"
 #include "hw/i386/x86.h"
 #include "target/i386/cpu.h"
 #include "hw/rtc/mc146818rtc.h"
@@ -1044,6 +1045,13 @@ static void load_bios_from_file(X86MachineState *x86ms, const char *bios_name,
         if (is_tdx_vm()) {
             tdx_set_tdvf_region(&x86ms->bios);
         }
+    } else if (mem_dir) {
+        g_autofree char *fname = g_strdup_printf("%s/pc.bios", mem_dir);
+        qemu_mkdir_for_file(fname);
+        memory_region_init_ram_from_file(&x86ms->bios, NULL, "pc.bios",
+                               bios_size, 4096, RAM_SHARED | RAM_NAMED_FILE,
+                               fname, 0,
+                               &error_fatal);
     } else {
         memory_region_init_ram(&x86ms->bios, NULL, "pc.bios",
                                bios_size, &error_fatal);
